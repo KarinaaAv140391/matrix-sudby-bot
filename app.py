@@ -3,8 +3,9 @@
 Разверните на Render/Railway/PythonAnywhere — SaleBot будет дёргать этот API.
 
 Эндпоинты:
-  GET /generate?type=free&day=14&month=3&year=1991&name=Анна
-  GET /generate?type=full&day=14&month=3&year=1991&name=Анна
+  GET /generate?type=free&date=14.03.1991&name=Анна
+  GET /generate?type=full&date=14.03.1991&name=Анна
+  (также поддерживается day=14&month=3&year=1991 вместо date)
 
 Возвращает JSON: {"pdf_url": "https://ваш-домен/files/xxxx.pdf"}
 """
@@ -23,12 +24,18 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 def generate():
     report_type = request.args.get("type", "free")
     name = request.args.get("name", "Друг")
+    date_str = request.args.get("date")
+
     try:
-        day = int(request.args.get("day"))
-        month = int(request.args.get("month"))
-        year = int(request.args.get("year"))
+        if date_str:
+            day_str, month_str, year_str = date_str.strip().split(".")
+            day, month, year = int(day_str), int(month_str), int(year_str)
+        else:
+            day = int(request.args.get("day"))
+            month = int(request.args.get("month"))
+            year = int(request.args.get("year"))
     except (TypeError, ValueError):
-        return jsonify({"error": "Нужны числовые параметры day, month, year"}), 400
+        return jsonify({"error": "Нужен параметр date=ДД.ММ.ГГГГ или day, month, year"}), 400
 
     filename = f"{uuid.uuid4().hex}.pdf"
     output_path = os.path.join(OUTPUT_DIR, filename)
